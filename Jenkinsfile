@@ -19,30 +19,26 @@ pipeline {   //Here pipeline is the root element
 
     //Build
     stages {
-    pipeline {
-        agent any
-        stages {
-            stage('Read package.json') {
-                steps {
-                    script {
-                        // Read the package.json file
-                        def packageJson = readJSON file: 'package.json'
-                        // Access properties, for example, the version
-                        appVersion = packageJson.version
-                        echo "Project version: ${appVersion}"
-                    }
-                }
-            }
-        }
-    }
-        stage('Test') {
+        stage('Read package.json') {
             steps {
-              script{
-                    echo 'Testing..'
+                script {
+                    // Read the package.json file
+                    def packageJson = readJSON file: 'package.json'
+                    // Access properties, for example, the version
+                    appVersion = packageJson.version
+                    echo "Project version: ${appVersion}"
                 }
             }
         }
-
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    sh """
+                        npm install 
+                    """
+                }
+            }
+        }
     }
 
     post { 
