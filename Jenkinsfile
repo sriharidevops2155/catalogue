@@ -3,7 +3,11 @@ pipeline {   //Here pipeline is the root element
         label 'AGENT-1'
     }
     environment{
-        appVersion = '' 
+        appVersion = ''
+        REGION = "us-east-1" 
+        ACC_ID = "583023875867"
+        PROJECT = "roboshop"
+        COMPONENT = "catalogue"
     }
     options{
         timeout(time: 30, unit: 'MINUTES')
@@ -22,9 +26,7 @@ pipeline {   //Here pipeline is the root element
         stage('Read package.json') {
             steps {
                 script {
-                    // Read the package.json file
                     def packageJson = readJSON file: 'package.json'
-                    // Access properties, for example, the version
                     appVersion = packageJson.version
                     echo "Project version: ${appVersion}"
                 }
@@ -39,6 +41,18 @@ pipeline {   //Here pipeline is the root element
                 }
             }
         }
+        stage('Docker Build') {
+        steps {
+            script {
+                 withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                        sh """
+                            aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com
+                            docker build -t ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
+                            docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
+                        """
+            }
+        }
+    }
     }
 
     post { 
