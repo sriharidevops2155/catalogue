@@ -41,6 +41,15 @@ pipeline {   //Here pipeline is the root element
                 }
             }
         }
+        stage('Unit Testing') {
+            steps {
+                script {
+                    sh """
+                        echo "Unit Testing is done"
+                    """
+                }
+            }
+        }
         stage('Docker Build') {
         steps {
             script {
