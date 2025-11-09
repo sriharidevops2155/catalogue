@@ -3,33 +3,38 @@ pipeline {   //Here pipeline is the root element
         label 'AGENT-1'
     }
     environment{
-        COURSE = 'Jenkins' 
+        appVersion = '' 
     }
     options{
         timeout(time: 30, unit: 'MINUTES')
        // disableConCurrentBuilds()
     }
-    parameters {
-        string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
-        text(name: 'BIOGRAPHY', defaultValue: '', description: 'Enter some information about the person')
-        booleanParam(name: 'TOGGLE', defaultValue: true, description: 'Toggle this value')
-        choice(name: 'CHOICE', choices: ['One', 'Two', 'Three'], description: 'Pick something')
-        password(name: 'PASSWORD', defaultValue: 'SECRET', description: 'Enter a password')
-    }
+    // parameters {
+    //     string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
+    //     text(name: 'BIOGRAPHY', defaultValue: '', description: 'Enter some information about the person')
+    //     booleanParam(name: 'TOGGLE', defaultValue: true, description: 'Toggle this value')
+    //     choice(name: 'CHOICE', choices: ['One', 'Two', 'Three'], description: 'Pick something')
+    //     password(name: 'PASSWORD', defaultValue: 'SECRET', description: 'Enter a password')
+    // }
 
     //Build
     stages {
-        stage('Build') {
-            steps {
-                script{
-                    sh """
-                        echo "Hello Build"
-                        env
-                        echo "Hello ${params.PERSON}"
-                    """
+    pipeline {
+        agent any
+        stages {
+            stage('Read package.json') {
+                steps {
+                    script {
+                        // Read the package.json file
+                        def packageJson = readJSON file: 'package.json'
+                        // Access properties, for example, the version
+                        appVersion = packageJson.version
+                        echo "Project version: ${appVersion}"
+                    }
                 }
             }
         }
+    }
         stage('Test') {
             steps {
               script{
@@ -37,22 +42,7 @@ pipeline {   //Here pipeline is the root element
                 }
             }
         }
-        stage('Deploy') {
-            input {
-            message "Should we continue?"
-            ok "Yes, we should."
-            submitter "alice,bob"
-            parameters {
-                string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
-            }
-        }
-            steps {
-              script{
-                    echo "Hello, ${PERSON}, nice to meet you."
-                    echo 'Deploying..'
-                }
-            }
-        }
+
     }
 
     post { 
