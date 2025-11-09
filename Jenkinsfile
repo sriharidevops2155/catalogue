@@ -50,11 +50,11 @@ pipeline {   //Here pipeline is the root element
                             docker build -t ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
                             docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
                         """
-            }
+                 }
+             }
         }
     }
     }
-
     post { 
         always { 
             echo 'I will always say Hello again!'
