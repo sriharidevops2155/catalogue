@@ -69,7 +69,7 @@ pipeline {   //Here pipeline is the root element
                     parameters: [
                         string(name: 'appVersion', value: "${appVersion}"),
                         string(name: 'deploy_to', value: 'dev')
-                    ]
+                    ],
                     propagate: false, // even SG fails VPC will not be effected.
                     wait: false // VPC will not wait for SG pipeline completion.
 
