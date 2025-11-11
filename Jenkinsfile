@@ -61,18 +61,18 @@ pipeline {   //Here pipeline is the root element
         }
         stage('Trigger Deploy') {
             when{
-                expression { params.DEPLOY_ENV == 'dev' }
-    
+                expression { params.deploy }
             }
             steps {
                 script {
-                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
-                            sh """
-                                aws ecr get-login-password --region ${REGION} | docker login --username AWS --password-stdin ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com
-                                docker build -t ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion} .
-                                docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
-                            """
-                     }
+                    build job: "catalogue-cd",
+                    parameters: [
+                        string(name: 'appVersion', value: "${appVersion}"),
+                        string(name: 'deploy_to', value: 'dev')
+                    ]
+                    propagate: false, // even SG fails VPC will not be effected.
+                    wait: false // VPC will not wait for SG pipeline completion.
+
                 }
             }
         }
