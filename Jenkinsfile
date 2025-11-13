@@ -46,6 +46,19 @@ pipeline {   //Here pipeline is the root element
                 }
             }
         }
+        stage('Sonar Scan') {
+            environment {
+                scannerHome = tool 'sonar-7.2'
+            }
+            steps {
+                script {
+                   // Sonar Server envrionment
+                   withSonarQubeEnv(installationName: 'sonar-7.2') {
+                         sh "${scannerHome}/bin/sonar-scanner"
+                   }
+                }
+            }
+        } 
         stage('Docker Build') {
             steps {
                 script {
@@ -72,7 +85,6 @@ pipeline {   //Here pipeline is the root element
                     ],
                     propagate: false, // even SG fails VPC will not be effected. 
                     wait: false // VPC will not wait for SG pipeline completion.
-
                 }
             }
         }
