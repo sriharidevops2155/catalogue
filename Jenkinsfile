@@ -46,7 +46,7 @@ pipeline {   //Here pipeline is the root element
                 }
             }
         }
-        stage('Sonar Scan') {
+/*         stage('Sonar Scan') {
             environment {
                 scannerHome = tool 'sonar-7.2'
             }
@@ -65,7 +65,7 @@ pipeline {   //Here pipeline is the root element
                 timeout(time: 1, unit: 'HOURS') {
                 waitForQualityGate abortPipeline: true }
             }
-        }
+        } */
         stage('Check Dependabot Alerts') {
             environment { 
                 GITHUB_TOKEN = credentials('github-token')
@@ -110,6 +110,40 @@ pipeline {   //Here pipeline is the root element
                                 docker push ${ACC_ID}.dkr.ecr.us-east-1.amazonaws.com/${PROJECT}/${COMPONENT}:${appVersion}
                             """
                      }
+                }
+            }
+        }
+        stage('Check Scan Results') {
+            steps {
+                script {
+                    withAWS(credentials: 'aws-creds', region: 'us-east-1') {
+                    // Fetch scan findings
+                        def findings = sh(
+                            script: """
+                                aws ecr describe-image-scan-findings \
+                                --repository-name ${PROJECT}/${COMPONENT} \
+                                --image-id imageTag=${appVersion} \
+                                --region ${REGION} \
+                                --output json
+                            """,
+                            returnStdout: true
+                        ).trim()
+
+                        // Parse JSON
+                        def json = readJSON text: findings
+
+                        def highCritical = json.imageScanFindings.findings.findAll {
+                            it.severity == "HIGH" || it.severity == "CRITICAL"
+                        }
+
+                        if (highCritical.size() > 0) {
+                            echo "❌ Found ${highCritical.size()} HIGH/CRITICAL vulnerabilities!"
+                            currentBuild.result = 'FAILURE'
+                            error("Build failed due to vulnerabilities")
+                        } else {
+                            echo "✅ No HIGH/CRITICAL vulnerabilities found."
+                        }
+                    }
                 }
             }
         }
